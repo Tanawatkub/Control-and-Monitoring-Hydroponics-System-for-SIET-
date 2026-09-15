@@ -4,8 +4,8 @@
 #include <ArduinoJson.h>
 
 // ================= แก้ค่าตรงนี้ให้ตรงกับของคุณ =================
-const char *WIFI_SSID = "Iphone 15";
-const char *WIFI_PASSWORD = "11111111";
+const char *WIFI_SSID = "BYTONOAK";
+const char *WIFI_PASSWORD = "1234567888";
 
 // จาก HiveMQ Cloud console: Cluster URL (ไม่ต้องมี wss:// หรือพอร์ตต่อท้าย)
 // เช่น "xxxxxxxx.s1.eu.hivemq.cloud"
@@ -21,8 +21,32 @@ const char *MQTT_TOPIC = "farm/growlight/command";
 
 const int PWM_PIN = 5;         // GPIO5 ตามแผนเดิม
 const int PWM_CHANNEL = 0;     // ledc channel 0-15
-const int PWM_FREQ = 2000;     // Hz
-const int PWM_RESOLUTION = 8;  // bit -> ค่า 0-255
+const int PWM_FREQ = 2000;     // Hz (ตรงกับ spec ของโมดูล PWM-to-Voltage)
+const int PWM_RESOLUTION = 15; // bit -> ค่า 0-32767
+
+// ================= Calibration แบบวัดตรง (ใช้ duty จริงที่วัด/คำนวณได้) =================
+// DUTY_AT_MIN = 1720 -> ประมาณ 0.68V (extrapolate จากจุดที่วัดจริง duty=1750->0.703V)
+// DUTY_AT_MAX = 1853 -> วัดจริงได้ 0.768V
+// หมายเหตุ: 1720 ยังไม่ได้วัดตรงจุดจริง เป็นค่าประมาณจากเส้นตรง ถ้าลองใช้แล้วไฟกระพริบ/ดับ
+// ให้ขยับตัวเลขนี้ขึ้นทีละ 5-10 จนกว่าจะติดนิ่งที่แรงดันต่ำสุดที่ต้องการ
+const int DUTY_AT_MIN = 1720; // duty ที่ value=1 (ไฟติดอ่อนสุด ~0.68V)
+const int DUTY_AT_MAX = 1853; // duty ที่ value=255 (สว่างสุด ~0.768V ห้ามเกิน)
+const int PWM_DUTY_MAX = (1 << PWM_RESOLUTION) - 1; // 32767 ที่ 15-bit
+
+// value=0     -> duty=0 (ไฟดับสนิท)
+// value=1-255 -> duty ถูกบีบไล่เรียงเส้นตรงระหว่าง DUTY_AT_MIN ถึง DUTY_AT_MAX เท่านั้น
+int remapToNarrowRange(int value0to255) {
+  value0to255 = constrain(value0to255, 0, 255);
+
+  if (value0to255 == 0) {
+    return 0; // ดับสนิท
+  }
+
+  // value 1-255 -> ไล่เส้นตรงจาก DUTY_AT_MIN ถึง DUTY_AT_MAX
+  float dutyFloat = DUTY_AT_MIN + ((value0to255 - 1) / 254.0) * (DUTY_AT_MAX - DUTY_AT_MIN);
+  int duty = (int)round(dutyFloat);
+  return constrain(duty, 0, PWM_DUTY_MAX);
+}
 
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
@@ -49,7 +73,7 @@ void setupWifi() {
     }
   }
 
-  WiFi.setSleep(false); // ปิด power-save mode กัน WiFi หลุด-เชื่อมใหม่วนบ่อยๆ (มักเกิดกับ hotspot มือถือ)
+  WiFi.setSleep(false); // ปิด power-save mode กัน WiFi หลุด-เชื่อมใหม่วนบ่อยๆ
 
   Serial.println();
   Serial.print("WiFi เชื่อมต่อแล้ว, IP: ");
@@ -74,10 +98,15 @@ void handlePwmCommand(byte *payload, unsigned int length) {
   int value = doc["value"];
   value = constrain(value, 0, 255);
 
-  ledcWrite(PWM_CHANNEL, value);
+  int duty = remapToNarrowRange(value);
+  ledcWrite(PWM_CHANNEL, duty);
 
-  Serial.print("ตั้งค่า PWM = ");
-  Serial.println(value);
+  Serial.print("ค่าที่ได้รับ = ");
+  Serial.print(value);
+  Serial.print(" (0-255) -> duty จริงที่ส่งออก = ");
+  Serial.print(duty);
+  Serial.print(" / ");
+  Serial.println(PWM_DUTY_MAX);
 }
 
 void mqttCallback(char *topic, byte *payload, unsigned int length) {

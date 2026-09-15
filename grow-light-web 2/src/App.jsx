@@ -7,7 +7,7 @@ import "./App.css";
 const DEFAULT_BROKER_URL = "wss://YOUR-CLUSTER-ID.s1.eu.hivemq.cloud:8884/mqtt";
 const COMMAND_TOPIC = "farm/growlight/command";
 
-const PRESETS = [0, 64, 128, 191, 255];
+const PRESETS = [0, 50, 128, 191, 255];
 
 function toPercentage(pwm) {
   return Number(((pwm / 255) * 100).toFixed(1));
