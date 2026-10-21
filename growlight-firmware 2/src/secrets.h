@@ -21,13 +21,14 @@
 
 // Wi-Fi สำรองแบบ WPA2-PSK เช่น hotspot มือถือ
 // เว้น SSID ว่างเพื่อปิด fallback
-#define WIFI_FALLBACK_SSID ""
-#define WIFI_FALLBACK_PASSWORD ""
+#define WIFI_FALLBACK_SSID "Popcornnja_2.4G"
+#define WIFI_FALLBACK_PASSWORD "0809396912AI"
 
 // HiveMQ Cloud
 // ใส่เฉพาะ hostname ไม่ต้องใส่ wss:// หรือพอร์ต
-#define MQTT_BROKER "YOUR-CLUSTER-ID.s1.eu.hivemq.cloud"
-#define MQTT_USERNAME "YOUR_MQTT_USERNAME"
-#define MQTT_PASSWORD "YOUR_MQTT_PASSWORD"
+// HiveMQ Cloud
+#define MQTT_BROKER "222cfef4a957446ea68f7659b4f66857.s1.eu.hivemq.cloud"
+#define MQTT_USERNAME "G05Hydroponics"
+#define MQTT_PASSWORD "P@ssw0rd"
 
 #endif
