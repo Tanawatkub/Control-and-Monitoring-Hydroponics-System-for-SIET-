@@ -1,22 +1,22 @@
-[
-  {
-    "description": "กรณีสถานะปกติ",
-    "device_id": "ESP32-MAC-001",
-    "temperature": 32.5,
-    "humidity": 65.0,
-    "ph_value": 6.5,
-    "ec_value": 1.2,
-    "water_level": 20.0,
-    "status": "normal"
-  },
-  {
-    "description": "กรณีสถานะผิดปกติ (ค่า pH สูงเกินเกณฑ์ ต้องแจ้งเตือน LINE)",
-    "device_id": "ESP32-MAC-001",
-    "temperature": 33.0,
-    "humidity": 60.0,
-    "ph_value": 8.2,
-    "ec_value": 1.2,
-    "water_level": 19.5,
-    "status": "alert"
-  }
-]
+{
+  "sensor_logs": [
+    {
+      "device_id": "ESP32-MAC-001",
+      "temperature": 32.5,
+      "humidity": 65.0,
+      "ph_value": 6.5,
+      "ec_value": 1.2,
+      "water_level": 20.0,
+      "recorded_at": "2026-10-22T10:00:00Z"
+    }
+  ],
+  "notification_logs": [
+    {
+      "device_id": "ESP32-MAC-001",
+      "alert_type": "ph",
+      "message": "⚠️ ค่า pH สูงเกินเกณฑ์ (8.2) ปั๊มปรับค่ากำลังทำงาน",
+      "is_resolved": false,
+      "sent_at": "2026-10-22T10:05:00Z"
+    }
+  ]
+}
