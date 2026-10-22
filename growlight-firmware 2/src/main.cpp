@@ -6,6 +6,7 @@
 #include <esp_wifi.h>
 #include <esp_arduino_version.h>
 #include "secrets.h"
+#include "water_level.h"
 
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
 #include <esp_eap_client.h>
@@ -389,6 +390,8 @@ void setup() {
 
   ledcWrite(PWM_CHANNEL, 0);
 
+  waterLevelBegin();
+
   setupWifi();
 
   // [แก้ข้อ 7] ถ้าใส่ MQTT_CA_CERT ใน secrets.h จะตรวจ certificate จริง
@@ -413,4 +416,7 @@ void loop() {
   }
 
   client.loop();
+
+  waterLevelLoop(client);
+  
 }
