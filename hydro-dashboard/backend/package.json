@@ -1,0 +1,22 @@
+{
+  "name": "hydroponics-bridge",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "start": "node --env-file=.env src/index.js",
+    "dev": "node --watch --env-file=.env src/index.js",
+    "simulate": "node --env-file=.env src/simulate.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "mqtt": "^5.10.0"
+  },
+  "devDependencies": {
+    "aedes": "^0.51.3"
+  }
+}

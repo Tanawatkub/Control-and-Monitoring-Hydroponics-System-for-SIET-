@@ -1,0 +1,12 @@
+{
+  "name": "hydroponics-system",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix frontend install && npm --prefix backend install",
+    "check": "npm --prefix backend test && npm --prefix frontend run build",
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "start:backend": "npm --prefix backend start",
+    "simulate": "npm --prefix backend run simulate"
+  }
+}
