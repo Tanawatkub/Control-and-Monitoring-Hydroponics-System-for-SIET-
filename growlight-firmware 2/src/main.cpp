@@ -7,6 +7,7 @@
 #include <esp_arduino_version.h>
 #include "secrets.h"
 #include "water_level.h"
+#include "light_sensor.h" 
 
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
 #include <esp_eap_client.h>
@@ -391,6 +392,7 @@ void setup() {
   ledcWrite(PWM_CHANNEL, 0);
 
   waterLevelBegin();
+  lightSensorBegin(); 
 
   setupWifi();
 
@@ -418,5 +420,7 @@ void loop() {
   client.loop();
 
   waterLevelLoop(client);
-  
+
+  lightSensorLoop(client); 
+
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import mqtt from "mqtt";
 import "./App.css";
 import "./water.css"; // [เพิ่ม] สไตล์การ์ดระดับน้ำ
+import "./light.css"; // [เพิ่ม] สไตล์การ์ดความสว่าง
 
 // TODO: แก้เป็น HiveMQ Cloud cluster ของคุณ
 // รูปแบบ: wss://<cluster-id>.s1.eu.hivemq.cloud:8884/mqtt
@@ -9,6 +10,9 @@ const DEFAULT_BROKER_URL = "wss://YOUR-CLUSTER-ID.s1.eu.hivemq.cloud:8884/mqtt";
 const COMMAND_TOPIC = "farm/growlight/command";
 const WATER_TOPIC = "farm/waterlevel/data"; // [เพิ่ม]
 const WATER_STALE_MS = 15000; // [เพิ่ม] ไม่มีข้อมูลเกิน 15 วินาที = ถือว่าเก่า
+const LIGHT_TOPIC = "farm/light/data"; // [เพิ่ม] VEML7700
+const LIGHT_STALE_MS = 15000; // [เพิ่ม]
+const LIGHT_LEVEL_LABELS = ["มืด", "สลัว", "ปกติ", "สว่าง", "สว่างมาก"]; // [เพิ่ม] ต้องตรงกับ light_sensor.h
 
 const PRESETS = [0, 50, 128, 191, 255];
 
@@ -25,6 +29,7 @@ export default function App() {
   const [pwm, setPwm] = useState(128);
   const [lastMessage, setLastMessage] = useState(null);
   const [water, setWater] = useState(null); // [เพิ่ม] {mv, percent, receivedAt}
+  const [light, setLight] = useState(null); // [เพิ่ม] {lux, receivedAt}
   const [now, setNow] = useState(Date.now()); // [เพิ่ม] ใช้เช็คว่าข้อมูลเก่าหรือยัง
   const clientRef = useRef(null);
 
@@ -51,7 +56,7 @@ export default function App() {
     client.on("connect", () => {
       setStatus("connected");
       // [เพิ่ม] subscribe ทุกครั้งที่เชื่อมต่อ (รวมถึงตอน reconnect)
-      client.subscribe(WATER_TOPIC, { qos: 0 }, (err) => {
+      client.subscribe([WATER_TOPIC, LIGHT_TOPIC], { qos: 0 }, (err) => {
         if (err) console.error("Subscribe error:", err);
       });
     });
@@ -62,18 +67,25 @@ export default function App() {
       setStatus("error");
     });
 
-    // [เพิ่ม] รับข้อมูลระดับน้ำจาก ESP32
+    // [เพิ่ม] รับข้อมูลเซนเซอร์จาก ESP32 (ระดับน้ำ + แสง)
     client.on("message", (topic, message) => {
-      if (topic !== WATER_TOPIC) return;
       try {
         const data = JSON.parse(message.toString());
-        setWater({
-          mv: Number(data.mv),
-          percent: Number(data.percent),
-          receivedAt: Date.now(),
-        });
+        if (topic === WATER_TOPIC) {
+          setWater({
+            mv: Number(data.mv),
+            percent: Number(data.percent),
+            receivedAt: Date.now(),
+          });
+        } else if (topic === LIGHT_TOPIC) {
+          setLight({
+            lux: Number(data.lux),
+            level: data.level === undefined ? null : Number(data.level),
+            receivedAt: Date.now(),
+          });
+        }
       } catch (err) {
-        console.error("Water payload parse error:", err);
+        console.error("Sensor payload parse error:", err);
       }
     });
 
@@ -127,6 +139,13 @@ export default function App() {
   const waterAgeSec = water ? Math.round((now - water.receivedAt) / 1000) : null;
   const waterStale = water ? now - water.receivedAt > WATER_STALE_MS : true;
   const waterPercent = water ? Math.min(100, Math.max(0, water.percent)) : 0;
+
+  // [เพิ่ม] คำนวณสถานะการ์ดแสง (แถบใช้สเกล log เพราะ lux มีช่วงกว้างมาก 0-100,000)
+  const lightAgeSec = light ? Math.round((now - light.receivedAt) / 1000) : null;
+  const lightStale = light ? now - light.receivedAt > LIGHT_STALE_MS : true;
+  const lightBar = light
+    ? Math.min(100, Math.max(0, (Math.log10(Math.max(light.lux, 0) + 1) / 5) * 100))
+    : 0;
 
   return (
     <div className="page">
@@ -239,6 +258,39 @@ export default function App() {
           </div>
           <p className="topic-note">
             topic: <code>{WATER_TOPIC}</code>
+          </p>
+        </section>
+
+        {/* [เพิ่ม] การ์ดแสดงความสว่าง */}
+        <section className="light">
+          <h2>ความสว่าง</h2>
+          <div className="light-readout">
+            <span className={`light-value ${lightStale ? "stale" : ""}`}>
+              {light ? light.lux.toLocaleString(undefined, { maximumFractionDigits: 1 }) : "--"}
+            </span>
+            <span className="light-unit">lux</span>
+          </div>
+          <div className={`light-label ${lightStale ? "stale" : ""}`}>
+            {light && light.level !== null ? LIGHT_LEVEL_LABELS[light.level] ?? "—" : "—"}
+          </div>
+          <div className="light-bar">
+            <div
+              className={`light-bar-fill ${lightStale ? "stale" : ""}`}
+              style={{ width: `${lightBar}%` }}
+            />
+          </div>
+          <div className="light-meta">
+            <span>{light ? "VEML7700" : "รอข้อมูล…"}</span>
+            <span>
+              {light
+                ? lightStale
+                  ? `ข้อมูลเก่า (${lightAgeSec} วินาทีที่แล้ว)`
+                  : `อัปเดต ${lightAgeSec} วินาทีที่แล้ว`
+                : ""}
+            </span>
+          </div>
+          <p className="topic-note">
+            topic: <code>{LIGHT_TOPIC}</code>
           </p>
         </section>
 
