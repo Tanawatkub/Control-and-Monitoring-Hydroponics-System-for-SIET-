@@ -21,7 +21,6 @@ export function Alerts() {
   return (
     <>
       <div className="row between">
-        <h2>การแจ้งเตือน</h2>
         <label className="row"><input type="checkbox" checked={onlyOpen} onChange={(e) => setOnlyOpen(e.target.checked)} /> เฉพาะที่ยังไม่ปิด</label>
       </div>
       {error && <p className="error">{error}</p>}

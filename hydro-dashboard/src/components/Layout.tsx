@@ -1,18 +1,31 @@
-import { NavLink, Outlet } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
+import { useState } from 'react'
+import { Menu, X } from 'lucide-react'
+import { Outlet, useLocation } from 'react-router-dom'
 import { useSelectedDevice } from '../hooks/DeviceContext'
 import { timeAgo } from '../lib/format'
+import { Sidebar } from './Sidebar'
+
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'ภาพรวม',
+  '/alerts': 'แจ้งเตือน',
+  '/thresholds': 'เกณฑ์',
+  '/control': 'ควบคุม',
+  '/users': 'ผู้ใช้',
+  '/audit': 'ประวัติแก้ไข',
+  '/account': 'บัญชี',
+}
 
 export function DeviceBar() {
   const { devices, selectedId, selected, select } = useSelectedDevice()
   if (devices.length === 0) return <div className="muted">ยังไม่มีอุปกรณ์ในระบบ</div>
   return (
-    <div className="row">
-      <select value={selectedId ?? ''} onChange={(e) => select(e.target.value)} aria-label="เลือกอุปกรณ์">
+    <div className="device-bar">
+      <select value={selectedId ?? ''} onChange={(e) => select(e.target.value)} aria-label="เลือก Zone">
         {devices.map((d) => <option key={d.id} value={d.id}>{d.location ?? d.name}</option>)}
       </select>
       {selected && (
-        <span className={`badge ${selected.is_online ? 'ok' : 'off'}`}>
+        <span className={`badge connection ${selected.is_online ? 'online' : 'offline'}`}>
+          <span className="status-dot" />
           {selected.is_online ? 'ออนไลน์' : 'ออฟไลน์'} · {timeAgo(selected.last_seen)}
         </span>
       )}
@@ -21,26 +34,24 @@ export function DeviceBar() {
 }
 
 export function Layout() {
-  const { profile, isAdmin, isStaff, signOut } = useAuth()
+  const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const title = PAGE_TITLES[location.pathname] ?? 'SIET Hydroponics System'
+
   return (
     <div className="shell">
-      <header className="topbar">
-        <strong>🌱 Hydroponics SIET</strong>
-        <nav>
-          <NavLink to="/" end>ภาพรวม</NavLink>
-          <NavLink to="/alerts">แจ้งเตือน</NavLink>
-          {isStaff && <NavLink to="/thresholds">เกณฑ์</NavLink>}
-          {isStaff && <NavLink to="/control">ควบคุม</NavLink>}
-          {isAdmin && <NavLink to="/users">ผู้ใช้</NavLink>}
-          {isAdmin && <NavLink to="/audit">ประวัติแก้ไข</NavLink>}
-          <NavLink to="/account">บัญชี</NavLink>
-        </nav>
-        <div className="row">
-          <span className="muted small">{profile?.email} ({profile?.role})</span>
-          <button className="ghost" onClick={() => void signOut()}>ออกจากระบบ</button>
-        </div>
-      </header>
-      <main className="content"><Outlet /></main>
+      <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} />
+      <div className={`drawer-backdrop ${menuOpen ? 'visible' : ''}`} onClick={() => setMenuOpen(false)} />
+      <div className="app-main">
+        <header className="page-header">
+          <button className="menu-toggle" aria-label={menuOpen ? 'ปิดเมนู' : 'เปิดเมนู'} onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <h1>{title}</h1>
+          <DeviceBar />
+        </header>
+        <main className="content"><Outlet /></main>
+      </div>
     </div>
   )
 }

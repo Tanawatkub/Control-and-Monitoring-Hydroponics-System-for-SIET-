@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { DeviceBar } from '../components/Layout'
 import { SensorCard } from '../components/SensorCard'
 import { SensorChart } from '../components/SensorChart'
 import { useSelectedDevice } from '../hooks/DeviceContext'
@@ -22,7 +21,6 @@ export function Dashboard() {
 
   return (
     <>
-      <div className="row between"><h2>ภาพรวม</h2><DeviceBar /></div>
       <p className="muted small">ข้อมูลล่าสุด: {fmtTime(latest?.recorded_at)} (อัปเดตสดเมื่อมีข้อมูลใหม่)</p>
       <section className="grid">
         {SENSORS.map((s) => {
@@ -36,10 +34,11 @@ export function Dashboard() {
       <section className="card">
         <div className="row between">
           <h3>กราฟ {def.label}</h3>
-          <select value={hours} onChange={(e) => setHours(Number(e.target.value))} aria-label="ช่วงเวลา">
-            <option value={1}>1 ชั่วโมง</option><option value={6}>6 ชั่วโมง</option>
-            <option value={24}>24 ชั่วโมง</option><option value={168}>7 วัน</option>
-          </select>
+          <div className="range-pills" aria-label="ช่วงเวลา">
+            {[{ value: 1, label: '1 ชม.' }, { value: 6, label: '6 ชม.' }, { value: 24, label: '24 ชม.' }, { value: 168, label: '7 วัน' }].map(({ value, label }) => (
+              <button key={value} type="button" className={hours === value ? 'selected' : ''} onClick={() => setHours(value)}>{label}</button>
+            ))}
+          </div>
         </div>
         {loading ? <p className="muted">กำลังโหลดกราฟ...</p> : <SensorChart rows={rows} def={def} th={th as Threshold | null} />}
       </section>

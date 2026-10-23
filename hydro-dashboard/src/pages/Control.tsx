@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
-import { DeviceBar } from '../components/Layout'
 import { useSelectedDevice } from '../hooks/DeviceContext'
 import { useActuators, useCommands } from '../hooks/data'
 import { fmtTime } from '../lib/format'
@@ -31,7 +30,6 @@ export function Control() {
 
   return (
     <>
-      <div className="row between"><h2>ควบคุมอุปกรณ์</h2><DeviceBar /></div>
       <p className="muted small">ระบบส่งคำสั่งลงฐานข้อมูล แล้ว Bridge Service ส่งต่อไปยัง ESP32 ผ่าน MQTT สถานะจะเปลี่ยนเมื่ออุปกรณ์ตอบรับ</p>
       {error && <p className="error">{error}</p>}
       {msg && <p className="error">{msg}</p>}

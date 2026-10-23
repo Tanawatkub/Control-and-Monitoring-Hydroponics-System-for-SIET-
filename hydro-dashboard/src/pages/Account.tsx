@@ -32,7 +32,6 @@ export function Account() {
   if (!profile) return null
   return (
     <>
-      <h2>บัญชีของฉัน</h2>
       <div className="card">
         <p><strong>อีเมล:</strong> {profile.email}</p>
         <p><strong>สิทธิ์:</strong> {profile.role}</p>

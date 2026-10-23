@@ -20,7 +20,6 @@ export function Users() {
 
   return (
     <>
-      <h2>จัดการผู้ใช้</h2>
       <p className="muted small">สร้างบัญชีใหม่ที่ Supabase → Authentication → Add user (ระบบสร้างโปรไฟล์ role = user ให้อัตโนมัติ) แล้วมาปรับสิทธิ์ที่หน้านี้</p>
       {error && <p className="error">{error}</p>}
       {msg && <p className="error">{msg}</p>}

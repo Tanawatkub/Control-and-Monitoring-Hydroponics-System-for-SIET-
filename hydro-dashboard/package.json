@@ -2,11 +2,27 @@
   "name": "hydroponics-system",
   "private": true,
   "scripts": {
+    "build": "vite build",
     "install:all": "npm --prefix frontend install && npm --prefix backend install",
     "check": "npm --prefix backend test && npm --prefix frontend run build",
     "dev": "npm --prefix frontend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "start:backend": "npm --prefix backend start",
     "simulate": "npm --prefix backend run simulate"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0",
+    "recharts": "^2.12.7"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0"
   }
 }

@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
-import { DeviceBar } from '../components/Layout'
 import { useSelectedDevice } from '../hooks/DeviceContext'
 import { useThreshold } from '../hooks/data'
 import type { Threshold } from '../lib/types'
@@ -52,7 +51,6 @@ export function Thresholds() {
 
   return (
     <>
-      <div className="row between"><h2>ตั้งค่าเกณฑ์แจ้งเตือน</h2><DeviceBar /></div>
       {error && <p className="error">{error}</p>}
       {loading ? <p className="muted">กำลังโหลด...</p> : !th ? (
         <p className="muted">อุปกรณ์นี้ยังไม่มีแถวเกณฑ์ใน thresholds (ต้องให้ admin เพิ่มแถวก่อน)</p>

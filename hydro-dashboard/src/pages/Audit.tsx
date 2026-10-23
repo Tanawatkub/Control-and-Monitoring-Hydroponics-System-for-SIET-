@@ -17,7 +17,6 @@ export function Audit() {
   const who = (id: string | null) => (id ? (profiles ?? []).find((p) => p.id === id)?.email ?? id.slice(0, 8) : 'ระบบ/SQL')
   return (
     <>
-      <h2>ประวัติการแก้ไข (Audit)</h2>
       <p className="muted small">บันทึกอัตโนมัติเมื่อมีการเปลี่ยนสิทธิ์ผู้ใช้หรือแก้เกณฑ์ (100 รายการล่าสุด)</p>
       {error && <p className="error">{error}</p>}
       {loading ? <p className="muted">กำลังโหลด...</p> : (
