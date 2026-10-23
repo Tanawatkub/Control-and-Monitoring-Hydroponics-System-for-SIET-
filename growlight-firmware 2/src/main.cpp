@@ -8,6 +8,7 @@
 #include "secrets.h"
 #include "water_level.h"
 #include "light_sensor.h" 
+#include "ph_sensor.h"
 
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
 #include <esp_eap_client.h>
@@ -393,6 +394,7 @@ void setup() {
 
   waterLevelBegin();
   lightSensorBegin(); 
+  phSensorBegin();  
 
   setupWifi();
 
@@ -420,7 +422,7 @@ void loop() {
   client.loop();
 
   waterLevelLoop(client);
-
   lightSensorLoop(client); 
+  phSensorLoop(client);
 
 }

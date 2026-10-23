@@ -4,9 +4,10 @@
 #include <PubSubClient.h>
 
 // ================= Analog Water Level Sensor =================
-// ใช้ช่อง Spare 1 บน PCB: A -> GPIO35 (ADC1), VCC -> 3.3V, GND -> GND
+// ใช้ช่อง Soil Moisture บน PCB: A -> GPIO34 (ADC1), VCC -> 3.3V, GND -> GND
+// (GPIO35 / Spare 1 ใช้กับเซนเซอร์ pH)
 // WATER_POWER_PIN = -1 หมายถึงไม่ใช้ขาควบคุมไฟ (ห้ามใช้ GPIO27 เพราะเป็น Relay)
-static const int WATER_PIN = 35;
+static const int WATER_PIN = 34;
 static const int WATER_POWER_PIN = -1;
 
 static const int WATER_SAMPLES = 32;                 // อ่านต่อรอบ 32 ครั้ง
@@ -27,7 +28,7 @@ static const struct { int mv; float percent; } WATER_TABLE[] = {
   {1695, 62.5f},   // 2.5 cm
   {1765, 75.0f},   // 3.0 cm
   {1797, 87.5f},   // 3.5 cm
-  {1800, 100.0f},  // 4.0 cm
+  {1886, 100.0f},  // 4.0 cm
 };
 static const int WATER_TABLE_N = sizeof(WATER_TABLE) / sizeof(WATER_TABLE[0]);
 

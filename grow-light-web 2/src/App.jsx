@@ -3,6 +3,7 @@ import mqtt from "mqtt";
 import "./App.css";
 import "./water.css"; // [เพิ่ม] สไตล์การ์ดระดับน้ำ
 import "./light.css"; // [เพิ่ม] สไตล์การ์ดความสว่าง
+import "./ph.css"; // [เพิ่ม] สไตล์การ์ด pH
 
 // TODO: แก้เป็น HiveMQ Cloud cluster ของคุณ
 // รูปแบบ: wss://<cluster-id>.s1.eu.hivemq.cloud:8884/mqtt
@@ -12,6 +13,8 @@ const WATER_TOPIC = "farm/waterlevel/data"; // [เพิ่ม]
 const WATER_STALE_MS = 15000; // [เพิ่ม] ไม่มีข้อมูลเกิน 15 วินาที = ถือว่าเก่า
 const LIGHT_TOPIC = "farm/light/data"; // [เพิ่ม] VEML7700
 const LIGHT_STALE_MS = 15000; // [เพิ่ม]
+const PH_TOPIC = "farm/ph/data"; // [เพิ่ม] PH-4502C
+const PH_STALE_MS = 15000; // [เพิ่ม]
 const LIGHT_LEVEL_LABELS = ["มืด", "สลัว", "ปกติ", "สว่าง", "สว่างมาก"]; // [เพิ่ม] ต้องตรงกับ light_sensor.h
 
 const PRESETS = [0, 50, 128, 191, 255];
@@ -30,6 +33,7 @@ export default function App() {
   const [lastMessage, setLastMessage] = useState(null);
   const [water, setWater] = useState(null); // [เพิ่ม] {mv, percent, receivedAt}
   const [light, setLight] = useState(null); // [เพิ่ม] {lux, receivedAt}
+  const [ph, setPh] = useState(null); // [เพิ่ม] {value, v, receivedAt}
   const [now, setNow] = useState(Date.now()); // [เพิ่ม] ใช้เช็คว่าข้อมูลเก่าหรือยัง
   const clientRef = useRef(null);
 
@@ -56,7 +60,7 @@ export default function App() {
     client.on("connect", () => {
       setStatus("connected");
       // [เพิ่ม] subscribe ทุกครั้งที่เชื่อมต่อ (รวมถึงตอน reconnect)
-      client.subscribe([WATER_TOPIC, LIGHT_TOPIC], { qos: 0 }, (err) => {
+      client.subscribe([WATER_TOPIC, LIGHT_TOPIC, PH_TOPIC], { qos: 0 }, (err) => {
         if (err) console.error("Subscribe error:", err);
       });
     });
@@ -75,6 +79,13 @@ export default function App() {
           setWater({
             mv: Number(data.mv),
             percent: Number(data.percent),
+            receivedAt: Date.now(),
+          });
+        } else if (topic === PH_TOPIC) {
+          const valid = data.valid === undefined ? true : Number(data.valid) === 1;
+          setPh({
+            value: valid ? Number(data.ph) : null,
+            v: Number(data.v),
             receivedAt: Date.now(),
           });
         } else if (topic === LIGHT_TOPIC) {
@@ -143,6 +154,11 @@ export default function App() {
   // [เพิ่ม] คำนวณสถานะการ์ดแสง (แถบใช้สเกล log เพราะ lux มีช่วงกว้างมาก 0-100,000)
   const lightAgeSec = light ? Math.round((now - light.receivedAt) / 1000) : null;
   const lightStale = light ? now - light.receivedAt > LIGHT_STALE_MS : true;
+  // [เพิ่ม] คำนวณสถานะการ์ด pH (แถบ 0-14)
+  const phAgeSec = ph ? Math.round((now - ph.receivedAt) / 1000) : null;
+  const phStale = ph ? now - ph.receivedAt > PH_STALE_MS : true;
+  const phBar = ph && ph.value !== null ? Math.min(100, Math.max(0, (ph.value / 14) * 100)) : 0;
+
   const lightBar = light
     ? Math.min(100, Math.max(0, (Math.log10(Math.max(light.lux, 0) + 1) / 5) * 100))
     : 0;
@@ -291,6 +307,42 @@ export default function App() {
           </div>
           <p className="topic-note">
             topic: <code>{LIGHT_TOPIC}</code>
+          </p>
+        </section>
+
+        {/* [เพิ่ม] การ์ดแสดงค่า pH */}
+        <section className="ph">
+          <h2>ค่า pH</h2>
+          <div className="ph-readout">
+            <span className={`ph-value ${phStale ? "stale" : ""}`}>
+              {ph && ph.value !== null ? ph.value.toFixed(2) : "--"}
+            </span>
+            <span className="ph-unit">pH</span>
+          </div>
+          <div className="ph-bar">
+            <div
+              className={`ph-bar-fill ${phStale ? "stale" : ""}`}
+              style={{ width: `${phBar}%` }}
+            />
+          </div>
+          <div className="ph-meta">
+            <span>
+              {ph
+                ? ph.value === null
+                  ? `ไม่พบสัญญาณ (${ph.v.toFixed(3)} V)`
+                  : `${ph.v.toFixed(3)} V`
+                : "รอข้อมูล…"}
+            </span>
+            <span>
+              {ph
+                ? phStale
+                  ? `ข้อมูลเก่า (${phAgeSec} วินาทีที่แล้ว)`
+                  : `อัปเดต ${phAgeSec} วินาทีที่แล้ว`
+                : ""}
+            </span>
+          </div>
+          <p className="topic-note">
+            topic: <code>{PH_TOPIC}</code>
           </p>
         </section>
 
